@@ -1,9 +1,0 @@
-{
-  "name": "chat-functions",
-  "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "masterchat": "^1.1.0",
-    "axios": "^1.6.0"
-  }
-}
