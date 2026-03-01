@@ -1,0 +1,15 @@
+[build]
+  functions  = "netlify/functions"
+  publish    = "."
+  command    = "npm install"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"

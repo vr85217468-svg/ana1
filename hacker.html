@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V r t i c s — Red Hat Operations</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Tajawal:wght@400;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --blood: #ff0033;
+            --blood-dark: #990022;
+            --blood-glow: rgba(255, 0, 51, 0.6);
+            --terminal-green: #00ff41;
+            --hack-red: #ff1744;
+            --dark: #050505;
+            --darker: #020202;
+            --code-bg: rgba(255, 0, 30, 0.03);
+        }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background: var(--darker);
+            color: var(--terminal-green);
+            height: 100vh;
+            overflow: hidden;
+            cursor: none;
+        }
+
+        /* Custom cursor */
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--blood);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 0 20px var(--blood), 0 0 60px var(--blood-glow);
+            transition: transform 0.1s;
+        }
+
+        /* ─── Matrix Rain Canvas ─── */
+        #matrix-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            opacity: 0.15;
+        }
+
+        /* ─── Scanlines ─── */
+        .scanlines {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.15) 2px,
+                    rgba(0, 0, 0, 0.15) 4px);
+        }
+
+        /* ─── Flicker overlay ─── */
+        .flicker {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
+            background: rgba(255, 0, 30, 0.02);
+        }
+
+        @keyframes flicker {
+            0% {
+                opacity: 0.97;
+            }
+
+            5% {
+                opacity: 0.9;
+            }
+
+            10% {
+                opacity: 0.98;
+            }
+
+            15% {
+                opacity: 0.93;
+            }
+
+            20% {
+                opacity: 0.99;
+            }
+
+            50% {
+                opacity: 0.96;
+            }
+
+            80% {
+                opacity: 0.98;
+            }
+
+            100% {
+                opacity: 0.97;
+            }
+        }
+
+        /* ─── Main Layout ─── */
+        .main-wrapper {
+            position: relative;
+            z-index: 5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ─── Top Bar ─── */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: rgba(10, 0, 0, 0.9);
+            border-bottom: 2px solid var(--blood);
+            box-shadow: 0 4px 30px rgba(255, 0, 51, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .top-bar::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: -100%;
+            width: 200%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--blood), var(--hack-red), var(--blood), transparent);
+            animation: scanline-move 2s linear infinite;
+        }
+
+        @keyframes scanline-move {
+            to {
+                transform: translateX(50%);
+            }
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-skull {
+            font-size: 32px;
+            filter: drop-shadow(0 0 10px var(--blood));
+            animation: pulse-skull 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-skull {
+
+            0%,
+            100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 10px var(--blood));
+            }
+
+            50% {
+                transform: scale(1.1);
+                filter: drop-shadow(0 0 25px var(--blood)) drop-shadow(0 0 50px rgba(255, 0, 51, 0.5));
+            }
+        }
+
+        .brand-name {
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 12px;
+            color: var(--blood);
+            text-shadow: 0 0 10px var(--blood), 0 0 30px var(--blood-glow), 0 0 60px rgba(255, 0, 51, 0.3);
+            animation: glitch-text 3s infinite;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        @keyframes glitch-text {
+
+            0%,
+            90%,
+            100% {
+                text-shadow: 0 0 10px var(--blood), 0 0 30px var(--blood-glow);
+                transform: translate(0);
+            }
+
+            91% {
+                text-shadow: -3px 0 #00ff41, 3px 0 #0000ff;
+                transform: translate(2px, -1px);
+            }
+
+            93% {
+                text-shadow: 3px 0 #ff0000, -3px 0 #00ffff;
+                transform: translate(-2px, 1px);
+            }
+
+            95% {
+                text-shadow: -2px 0 #ff00ff, 2px 0 #ffff00;
+                transform: translate(1px, 2px);
+            }
+
+            97% {
+                text-shadow: 0 0 10px var(--blood), 0 0 30px var(--blood-glow);
+                transform: translate(0);
+            }
+        }
+
+        .brand-sub {
+            font-size: 10px;
+            color: var(--hack-red);
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        .top-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 12px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--blood);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--blood);
+            border-radius: 50%;
+            animation: blink-dot 1s infinite;
+            box-shadow: 0 0 10px var(--blood);
+        }
+
+        @keyframes blink-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.2;
+            }
+        }
+
+        .time-display {
+            color: var(--terminal-green);
+            font-size: 13px;
+            text-shadow: 0 0 8px var(--terminal-green);
+        }
+
+        /* ─── Content Area ─── */
+        .content-area {
+            flex: 1;
+            display: flex;
+            gap: 0;
+            min-height: 0;
+        }
+
+        /* ─── Left Panel: Skull + Stats ─── */
+        .left-panel {
+            width: 280px;
+            background: rgba(10, 0, 0, 0.85);
+            border-right: 1px solid rgba(255, 0, 51, 0.3);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 16px;
+            overflow-y: auto;
+        }
+
+        .ascii-skull {
+            font-size: 8px;
+            line-height: 1.1;
+            color: var(--blood);
+            text-align: center;
+            white-space: pre;
+            text-shadow: 0 0 5px var(--blood-glow);
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        .stat-card {
+            background: rgba(255, 0, 30, 0.05);
+            border: 1px solid rgba(255, 0, 51, 0.2);
+            border-radius: 6px;
+            padding: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--blood);
+            box-shadow: 0 0 10px var(--blood);
+        }
+
+        .stat-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(255, 0, 51, 0.6);
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            color: var(--blood);
+            text-shadow: 0 0 8px var(--blood-glow);
+            font-weight: bold;
+        }
+
+        .stat-sub {
+            font-size: 10px;
+            color: rgba(0, 255, 65, 0.5);
+            margin-top: 2px;
+        }
+
+        .threat-level {
+            text-align: center;
+            padding: 14px;
+            background: rgba(255, 0, 0, 0.08);
+            border: 1px solid rgba(255, 0, 51, 0.4);
+            border-radius: 8px;
+            animation: threat-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes threat-pulse {
+
+            0%,
+            100% {
+                border-color: rgba(255, 0, 51, 0.4);
+                box-shadow: none;
+            }
+
+            50% {
+                border-color: var(--blood);
+                box-shadow: 0 0 20px rgba(255, 0, 51, 0.3), inset 0 0 20px rgba(255, 0, 51, 0.1);
+            }
+        }
+
+        .threat-label {
+            font-size: 9px;
+            letter-spacing: 3px;
+            color: rgba(255, 0, 51, 0.5);
+            text-transform: uppercase;
+        }
+
+        .threat-value {
+            font-size: 22px;
+            color: var(--blood);
+            text-shadow: 0 0 15px var(--blood), 0 0 40px var(--blood-glow);
+            font-weight: bold;
+            margin-top: 4px;
+        }
+
+        /* ─── Center: Terminal Code ─── */
+        .terminal-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: rgba(20, 0, 0, 0.9);
+            border-bottom: 1px solid rgba(255, 0, 51, 0.2);
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .terminal-dots span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .terminal-dots span:nth-child(1) {
+            background: #ff0033;
+            box-shadow: 0 0 6px #ff0033;
+        }
+
+        .terminal-dots span:nth-child(2) {
+            background: #ff6600;
+        }
+
+        .terminal-dots span:nth-child(3) {
+            background: #333;
+        }
+
+        .terminal-title {
+            font-size: 12px;
+            color: rgba(255, 0, 51, 0.7);
+            letter-spacing: 2px;
+        }
+
+        .terminal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: rgba(5, 0, 0, 0.95);
+            direction: ltr;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .terminal-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .terminal-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .terminal-body::-webkit-scrollbar-thumb {
+            background: var(--blood-dark);
+            border-radius: 4px;
+        }
+
+        .code-line {
+            display: flex;
+            gap: 16px;
+            padding: 1px 0;
+            opacity: 0;
+            animation: code-appear 0.05s forwards;
+            position: relative;
+        }
+
+        .code-line:hover {
+            background: rgba(255, 0, 30, 0.05);
+        }
+
+        .code-line.executing {
+            background: rgba(255, 0, 51, 0.08);
+            border-left: 2px solid var(--blood);
+            box-shadow: inset 4px 0 15px rgba(255, 0, 51, 0.1);
+        }
+
+        @keyframes code-appear {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .line-num {
+            color: rgba(255, 0, 51, 0.3);
+            min-width: 40px;
+            text-align: right;
+            user-select: none;
+            font-size: 11px;
+        }
+
+        .line-content {
+            flex: 1;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* Syntax highlighting */
+        .kw {
+            color: var(--blood);
+            font-weight: bold;
+        }
+
+        .str {
+            color: #ff6b6b;
+        }
+
+        .cm {
+            color: #444;
+            font-style: italic;
+        }
+
+        .fn {
+            color: #ff4081;
+        }
+
+        .num {
+            color: #ff8a65;
+        }
+
+        .op {
+            color: #ff1744;
+        }
+
+        .var {
+            color: #00ff41;
+        }
+
+        .prop {
+            color: #ff5252;
+        }
+
+        .type {
+            color: #ff7043;
+        }
+
+        /* ─── Right Panel: Activity Log ─── */
+        .right-panel {
+            width: 300px;
+            background: rgba(10, 0, 0, 0.85);
+            border-left: 1px solid rgba(255, 0, 51, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .log-header {
+            padding: 12px 16px;
+            background: rgba(20, 0, 0, 0.9);
+            border-bottom: 1px solid rgba(255, 0, 51, 0.2);
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: var(--blood);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .log-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .log-body::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .log-body::-webkit-scrollbar-thumb {
+            background: var(--blood-dark);
+        }
+
+        .log-entry {
+            font-size: 10px;
+            padding: 6px 8px;
+            border-radius: 4px;
+            background: rgba(255, 0, 30, 0.03);
+            border-left: 2px solid transparent;
+            animation: log-in 0.3s ease;
+            line-height: 1.5;
+        }
+
+        .log-entry.danger {
+            border-left-color: var(--blood);
+            color: var(--blood);
+        }
+
+        .log-entry.success {
+            border-left-color: var(--terminal-green);
+            color: var(--terminal-green);
+        }
+
+        .log-entry.warning {
+            border-left-color: #ff8a00;
+            color: #ff8a00;
+        }
+
+        .log-entry.info {
+            border-left-color: #666;
+            color: #666;
+        }
+
+        @keyframes log-in {
+            from {
+                opacity: 0;
+                transform: translateX(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .log-time {
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 9px;
+        }
+
+        /* ─── Bottom Bar ─── */
+        .bottom-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 20px;
+            background: rgba(10, 0, 0, 0.95);
+            border-top: 1px solid rgba(255, 0, 51, 0.3);
+            font-size: 10px;
+            color: rgba(255, 0, 51, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .bottom-bar .copy {
+            color: rgba(255, 0, 51, 0.3);
+        }
+
+        .progress-bar {
+            width: 120px;
+            height: 3px;
+            background: rgba(255, 0, 51, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--blood);
+            box-shadow: 0 0 8px var(--blood);
+            width: 0%;
+            animation: progress-run 8s linear infinite;
+        }
+
+        @keyframes progress-run {
+            0% {
+                width: 0%;
+            }
+
+            100% {
+                width: 100%;
+            }
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 900px) {
+
+            .left-panel,
+            .right-panel {
+                display: none;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .brand-name {
+                font-size: 18px;
+                letter-spacing: 6px;
+            }
+
+            .terminal-body {
+                font-size: 11px;
+                padding: 12px;
+            }
+        }
+
+        /* ─── Glitch image effect ─── */
+        .glitch-wrapper {
+            position: relative;
+        }
+
+        /* blood drip */
+        .blood-drip {
+            position: fixed;
+            top: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--blood), transparent);
+            z-index: 3;
+            pointer-events: none;
+            animation: drip 4s ease-in infinite;
+            border-radius: 0 0 50% 50%;
+        }
+
+        @keyframes drip {
+            0% {
+                height: 0;
+                opacity: 1;
+            }
+
+            70% {
+                height: 200px;
+                opacity: 0.8;
+            }
+
+            100% {
+                height: 250px;
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="cursor-dot" id="cursor"></div>
+    <canvas id="matrix-canvas"></canvas>
+    <div class="scanlines"></div>
+    <div class="flicker"></div>
+
+    <!-- Blood drips -->
+    <div class="blood-drip" style="left:10%; animation-delay:0s;"></div>
+    <div class="blood-drip" style="left:30%; animation-delay:1.5s;"></div>
+    <div class="blood-drip" style="left:55%; animation-delay:0.8s;"></div>
+    <div class="blood-drip" style="left:75%; animation-delay:2.2s;"></div>
+    <div class="blood-drip" style="left:90%; animation-delay:3s;"></div>
+
+    <div class="main-wrapper">
+
+        <!-- ─── Top Bar ─── -->
+        <div class="top-bar">
+            <div class="brand">
+                <span class="brand-skull">💀</span>
+                <div>
+                    <div class="brand-name">V R T I C S</div>
+                    <div class="brand-sub">☠ Red Hat Operations ☠</div>
+                </div>
+            </div>
+            <div class="top-right">
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span>OPERATION ACTIVE</span>
+                </div>
+                <div class="time-display" id="live-time">00:00:00</div>
+            </div>
+        </div>
+
+        <!-- ─── Content ─── -->
+        <div class="content-area">
+
+            <!-- Left Panel -->
+            <div class="left-panel">
+                <pre class="ascii-skull">
+      ██████████████
+    ██░░░░░░░░░░░░██
+  ██░░░░░░░░░░░░░░░░██
+  ██░░░░░░░░░░░░░░░░██
+  ██░░██░░░░░░██░░░░██
+  ██░░██░░░░░░██░░░░██
+  ██░░░░░░██░░░░░░░░██
+  ██░░░░░░░░░░░░░░░░██
+  ██░░░░████████░░░░██
+    ██░░░░░░░░░░░░██
+      ██████████████
+  ╔══════════════════╗
+  ║  R E D   H A T   ║
+  ║   O P S   🔴      ║
+  ╚══════════════════╝
+        </pre>
+
+                <div class="threat-level">
+                    <div class="threat-label">Threat Level</div>
+                    <div class="threat-value" id="threat-val">CRITICAL</div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Packets Intercepted</div>
+                        <div class="stat-value" id="packets">0</div>
+                        <div class="stat-sub">+127/sec</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Active Connections</div>
+                        <div class="stat-value" id="connections">0</div>
+                        <div class="stat-sub">encrypted tunnels</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Data Extracted</div>
+                        <div class="stat-value" id="data-ext">0 KB</div>
+                        <div class="stat-sub">YouTube Live Chat API</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Supabase Writes</div>
+                        <div class="stat-value" id="supa-writes">0</div>
+                        <div class="stat-sub">comments archived</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terminal -->
+            <div class="terminal-panel">
+                <div class="terminal-header">
+                    <div class="terminal-dots"><span></span><span></span><span></span></div>
+                    <span class="terminal-title">▸ LIVE CODE EXECUTION — comments.js</span>
+                    <span style="margin-left:auto;font-size:10px;color:#333;" id="file-indicator">FILE 1/2</span>
+                </div>
+                <div class="terminal-body" id="terminal"></div>
+            </div>
+
+            <!-- Right Panel: Activity Log -->
+            <div class="right-panel">
+                <div class="log-header">
+                    <span class="status-dot"></span>
+                    Activity Log
+                </div>
+                <div class="log-body" id="activity-log"></div>
+            </div>
+
+        </div>
+
+        <!-- ─── Bottom Bar ─── -->
+        <div class="bottom-bar">
+            <span class="copy">© 2026 V R T I C S — All Rights Reserved</span>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+            <span id="exec-status">EXECUTING...</span>
+        </div>
+
+    </div>
+
+    <script>
+        // ═══ MATRIX RAIN ═══
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const chars = 'VRTICS01アイウエオカキクケコ甲乙丙丁戊己庚辛壬癸'.split('');
+        const columns = Math.floor(canvas.width / 14);
+        const drops = Array(columns).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(2, 2, 2, 0.06)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = '13px Share Tech Mono';
+
+            for (let i = 0; i < drops.length; i++) {
+                const char = chars[Math.floor(Math.random() * chars.length)];
+                const x = i * 14;
+                const y = drops[i] * 14;
+
+                ctx.fillStyle = Math.random() > 0.95
+                    ? 'rgba(255, 0, 51, 0.9)'
+                    : 'rgba(255, 0, 51, 0.25)';
+                ctx.fillText(char, x, y);
+
+                if (y > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 50);
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // ═══ CUSTOM CURSOR ═══
+        const cursor = document.getElementById('cursor');
+        document.addEventListener('mousemove', e => {
+            cursor.style.left = e.clientX - 4 + 'px';
+            cursor.style.top = e.clientY - 4 + 'px';
+        });
+
+        // ═══ LIVE TIME ═══
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('live-time').textContent =
+                now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Baghdad' });
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // ═══ STATS COUNTERS ═══
+        let packets = 0, connections = 14, dataKb = 0, supaWrites = 0;
+        setInterval(() => {
+            packets += Math.floor(Math.random() * 200) + 50;
+            connections = 10 + Math.floor(Math.random() * 20);
+            dataKb += Math.floor(Math.random() * 50) + 10;
+            supaWrites += Math.floor(Math.random() * 5);
+            document.getElementById('packets').textContent = packets.toLocaleString();
+            document.getElementById('connections').textContent = connections;
+            document.getElementById('data-ext').textContent =
+                dataKb > 1024 ? (dataKb / 1024).toFixed(1) + ' MB' : dataKb + ' KB';
+            document.getElementById('supa-writes').textContent = supaWrites.toLocaleString();
+        }, 1500);
+
+        // ═══ THREAT LEVEL ═══
+        const threats = ['CRITICAL', 'SEVERE', 'HIGH', 'EXTREME', 'MAXIMUM'];
+        setInterval(() => {
+            document.getElementById('threat-val').textContent =
+                threats[Math.floor(Math.random() * threats.length)];
+        }, 4000);
+
+        // ═══ THE ACTUAL CODE — comments.js & all-comments.js ═══
+        const codeFiles = [
+            {
+                name: 'comments.js',
+                code: `// ═══════════════════════════════════════════════════════
+// Netlify Function — comments.js
+// يجلب التعليقات الحالية من يوتيوب + يحفظ في Supabase
+// ═══════════════════════════════════════════════════════
+
+const VIDEO_ID = "6_9ZiuONXt0";
+const SUPA_URL = process.env.SUPABASE_URL;
+const SUPA_KEY = process.env.SUPABASE_KEY;
+
+async function go(url, opts = {}, ms = 8000) {
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), ms);
+  try {
+    return await fetch(url, { ...opts, signal: ac.signal });
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+// ─── جلب التعليقات الحالية من يوتيوب ─────────────
+async function getYouTubeChat() {
+  const page = await go(
+    \`https://www.youtube.com/watch?v=\${VIDEO_ID}\`,
+    {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0)",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+    }
+  );
+  const html = await page.text();
+
+  const ytKey = (html.match(
+    /"INNERTUBE_API_KEY"\\s*:\\s*"([^"]+)"/
+  ) || [])[1] || "AIzaSyAO_FJ2SlqU8Q4S";
+
+  const clientVer = (html.match(
+    /"INNERTUBE_CLIENT_VERSION"\\s*:\\s*"([^"]+)"/
+  ) || [])[1] || "2.20240201.00.00";
+
+  const patterns = [
+    /invalidationContinuationData/,
+    /timedContinuationData/,
+    /reloadContinuationData/,
+    /liveChatRenderer/,
+  ];
+
+  let cont = null;
+  for (const p of patterns) {
+    const m = html.match(p);
+    if (m?.[1]?.length > 20) {
+      cont = m[1];
+      break;
+    }
+  }
+  if (!cont) return [];
+
+  const chatRes = await go(
+    \`https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?key=\${ytKey}\`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Origin": "https://www.youtube.com",
+        "X-YouTube-Client-Name": "1",
+      },
+      body: JSON.stringify({
+        context: {
+          client: {
+            clientName: "WEB",
+            clientVersion: clientVer,
+          }
+        },
+        continuation: cont,
+      }),
+    }
+  );
+
+  const data = await chatRes.json();
+  const actions = data?.continuationContents
+    ?.liveChatContinuation?.actions || [];
+
+  const msgs = [];
+  for (const a of actions) {
+    const r = a?.addChatItemAction
+      ?.item?.liveChatTextMessageRenderer;
+    if (!r) continue;
+
+    const text = (r.message?.runs || [])
+      .map(x => x.text || "").join("").trim();
+    if (!text) continue;
+
+    msgs.push({
+      youtube_id: r.id,
+      author: r.authorName?.simpleText || "مجهول",
+      message: text,
+      created_at: new Date().toISOString(),
+    });
+  }
+  return msgs;
+}
+
+// ─── Handler ──────────────────────────────────────────
+exports.handler = async function () {
+  let liveMessages = [];
+  try {
+    liveMessages = await getYouTubeChat();
+  } catch (_) {}
+
+  // حفظ في Supabase
+  if (liveMessages.length > 0) {
+    try {
+      await go(\`\${SUPA_URL}/rest/v1/comments\`, {
+        method: "POST",
+        headers: {
+          apikey: SUPA_KEY,
+          Authorization: \`Bearer \${SUPA_KEY}\`,
+          "Content-Type": "application/json",
+          Prefer: "resolution=ignore-duplicates",
+        },
+        body: JSON.stringify(liveMessages),
+      });
+    } catch (_) {}
+  }
+
+  return {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*"
+    },
+    body: JSON.stringify({
+      messages: liveMessages,
+      total: liveMessages.length,
+    }),
+  };
+};`
+            },
+            {
+                name: 'all-comments.js',
+                code: `// ═══════════════════════════════════════════════════════
+// Netlify Function — all-comments.js
+// يقرأ كل التعليقات المحفوظة من Supabase للأرشيف
+// ═══════════════════════════════════════════════════════
+
+const SUPA_URL = process.env.SUPABASE_URL;
+const SUPA_KEY = process.env.SUPABASE_KEY;
+
+async function fetchWithTimeout(url, opts = {}, ms = 8000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, {
+      ...opts,
+      signal: ctrl.signal,
+    });
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+exports.handler = async function () {
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+  };
+
+  if (!SUPA_URL || !SUPA_KEY) {
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        comments: [],
+        total: 0,
+        error: "Missing environment variables",
+      }),
+    };
+  }
+
+  try {
+    const res = await fetchWithTimeout(
+      \`\${SUPA_URL}/rest/v1/comments?select=*&order=created_at.asc&limit=50000\`,
+      {
+        headers: {
+          apikey: SUPA_KEY,
+          Authorization: \`Bearer \${SUPA_KEY}\`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!res.ok) {
+      const errText = await res.text();
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          comments: [],
+          total: 0,
+          error: \`Supabase error \${res.status}\`,
+        }),
+      };
+    }
+
+    const comments = await res.json();
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        comments,
+        total: comments.length,
+        error: null,
+      }),
+    };
+  } catch (e) {
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        comments: [],
+        total: 0,
+        error: e.message,
+      }),
+    };
+  }
+};`
+            }
+        ];
+
+        // ═══ SYNTAX HIGHLIGHTER ═══
+        function highlight(line) {
+            return line
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/(\/\/.*$)/gm, '<span class="cm">$1</span>')
+                .replace(/\b(const|let|var|function|async|await|return|try|catch|finally|if|for|of|new|export|throw)\b/g, '<span class="kw">$1</span>')
+                .replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)/g, '<span class="str">$1</span>')
+                .replace(/\b(\d+)\b/g, '<span class="num">$1</span>')
+                .replace(/\b(exports|process|JSON|Date|Math|console|AbortController|setTimeout|clearTimeout|fetch)\b/g, '<span class="type">$1</span>')
+                .replace(/(=>|\.\.\.|\?\.|===|!==|&&|\|\|)/g, '<span class="op">$1</span>');
+        }
+
+        // ═══ CODE RENDERER ═══
+        const terminal = document.getElementById('terminal');
+        let currentFile = 0;
+        let currentLine = 0;
+        let lines = [];
+
+        function startFile(index) {
+            currentFile = index;
+            currentLine = 0;
+            lines = codeFiles[index].code.split('\n');
+            terminal.innerHTML = '';
+            document.querySelector('.terminal-title').textContent =
+                `▸ LIVE CODE EXECUTION — ${codeFiles[index].name}`;
+            document.getElementById('file-indicator').textContent =
+                `FILE ${index + 1}/${codeFiles.length}`;
+            addLog(`[SYS] Loading ${codeFiles[index].name}...`, 'danger');
+            addLog(`[SYS] ${lines.length} lines detected`, 'info');
+        }
+
+        function renderNextLine() {
+            if (currentLine >= lines.length) {
+                addLog(`[OK] ${codeFiles[currentFile].name} fully executed`, 'success');
+                setTimeout(() => {
+                    const next = (currentFile + 1) % codeFiles.length;
+                    startFile(next);
+                }, 2000);
+                return;
+            }
+
+            const line = lines[currentLine];
+            const div = document.createElement('div');
+            div.className = 'code-line';
+            div.style.animationDelay = '0s';
+
+            if (currentLine > 0) {
+                const prev = terminal.querySelector('.code-line.executing');
+                if (prev) prev.classList.remove('executing');
+            }
+
+            div.innerHTML = `
+        <span class="line-num">${currentLine + 1}</span>
+        <span class="line-content">${highlight(line)}</span>
+      `;
+
+            // Mark as executing
+            if (line.trim() && !line.trim().startsWith('//') && !line.trim().startsWith('*')) {
+                div.classList.add('executing');
+            }
+
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+
+            // Random activity logs
+            if (Math.random() > 0.85 && line.trim()) {
+                const logMsgs = [
+                    ['[INTERCEPT] Packet captured from YouTube API', 'danger'],
+                    ['[CRYPTO] Encrypting data stream...', 'warning'],
+                    ['[DB] Writing to Supabase cluster...', 'success'],
+                    ['[NET] TCP handshake established', 'info'],
+                    ['[SCAN] Port scan in progress...', 'danger'],
+                    ['[AUTH] Token validated successfully', 'success'],
+                    ['[EXFIL] Data chunk transferred', 'warning'],
+                    ['[PROXY] Routing through secure tunnel', 'info'],
+                    ['[MEM] Buffer allocated: ' + (Math.random() * 512).toFixed(0) + 'KB', 'info'],
+                    ['[CPU] Thread spawned for async op', 'warning'],
+                ];
+                const [msg, type] = logMsgs[Math.floor(Math.random() * logMsgs.length)];
+                addLog(msg, type);
+            }
+
+            currentLine++;
+
+            // Variable speed — faster for empty/comment lines
+            const delay = line.trim() === '' || line.trim().startsWith('//')
+                ? 30 + Math.random() * 40
+                : 60 + Math.random() * 100;
+
+            setTimeout(renderNextLine, delay);
+        }
+
+        // ═══ ACTIVITY LOG ═══
+        const logEl = document.getElementById('activity-log');
+        function addLog(message, type = 'info') {
+            const time = new Date().toLocaleTimeString('en-US', {
+                hour12: false, timeZone: 'Asia/Baghdad'
+            });
+            const div = document.createElement('div');
+            div.className = `log-entry ${type}`;
+            div.innerHTML = `<span class="log-time">${time}</span> ${message}`;
+            logEl.appendChild(div);
+            logEl.scrollTop = logEl.scrollHeight;
+
+            // Keep only last 100 entries
+            while (logEl.children.length > 100) {
+                logEl.removeChild(logEl.firstChild);
+            }
+        }
+
+        // ═══ INITIAL BOOT SEQUENCE ═══
+        const bootMsgs = [
+            ['[BOOT] V R T I C S kernel loading...', 'danger', 300],
+            ['[BOOT] Initializing Red Hat protocols...', 'danger', 500],
+            ['[SYS] Secure connection established', 'success', 400],
+            ['[SYS] Encryption layer: AES-256-GCM', 'warning', 300],
+            ['[NET] Proxy chain: 7 nodes active', 'info', 350],
+            ['[AUTH] Operator authenticated ☠', 'danger', 400],
+            ['[LOAD] Source code injection ready...', 'danger', 600],
+            ['[EXEC] Beginning code execution...', 'success', 500],
+        ];
+
+        let bootIndex = 0;
+        function bootSequence() {
+            if (bootIndex >= bootMsgs.length) {
+                startFile(0);
+                renderNextLine();
+                return;
+            }
+            const [msg, type, delay] = bootMsgs[bootIndex];
+            addLog(msg, type);
+            bootIndex++;
+            setTimeout(bootSequence, delay);
+        }
+
+        bootSequence();
+
+        // ═══ EXEC STATUS ANIMATION ═══
+        const statusTexts = ['EXECUTING...', 'INJECTING...', 'INTERCEPTING...', 'ENCRYPTING...', 'EXTRACTING...'];
+        let statusIdx = 0;
+        setInterval(() => {
+            statusIdx = (statusIdx + 1) % statusTexts.length;
+            document.getElementById('exec-status').textContent = statusTexts[statusIdx];
+        }, 3000);
+    </script>
+
+</body>
+
+</html>
